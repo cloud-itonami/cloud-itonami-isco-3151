@@ -1,0 +1,56 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>marine operator console -- cloud-itonami-isco-3151</title>
+<style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:2rem;background:#0b0d12;color:#e6e9ef}
+h1{font-size:1.4rem;margin:0 0 .25rem}
+h2{font-size:1.05rem;margin:2rem 0 .5rem;color:#9fb3c8}
+.sub{color:#8792a3;margin:0 0 1.5rem;font-size:.9rem}
+table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:.88rem}
+th,td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid #232833}
+th{color:#8792a3;font-weight:600;text-transform:uppercase;font-size:.72rem;letter-spacing:.03em}
+code{background:#151922;padding:.1rem .35rem;border-radius:4px;font-size:.85em}
+.ok{color:#4ade80;font-weight:600}
+.warn{color:#fbbf24;font-weight:600}
+.critical{color:#f87171;font-weight:600}
+.muted{color:#8792a3}
+.card{background:#12151c;border:1px solid #232833;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.5rem}</style></head><body>
+<h1>marine operator console</h1>
+<p class="sub">ISCO-08 3151 &middot; ship engineering officer actor &middot; generated at build time by driving the real <code>marine.actor</code> StateGraph (<code>intake &rarr; advise &rarr; govern &rarr; decide &rarr; commit/hold</code>, human-approval interrupt for escalations) &mdash; no invented data, no timestamps.</p>
+<div class="card">
+<h2>Registered vessels</h2>
+<table><thead><tr><th>vessel-id</th><th>name</th><th>imo-number</th></tr></thead><tbody>
+<tr><td>vessel-1</td><td>MV Pacific</td><td>9123456</td></tr>
+<tr><td>vessel-2</td><td>MV Aurora</td><td>9234567</td></tr>
+</tbody></table>
+<h2>Registered equipment</h2>
+<table><thead><tr><th>vessel-id</th><th>equipment-id</th><th>name</th><th>type</th></tr></thead><tbody>
+<tr><td>vessel-1</td><td>engine-1</td><td>Main Diesel Engine</td><td>Wartsila 8L32</td></tr>
+<tr><td>vessel-2</td><td>generator-1</td><td>Auxiliary Generator</td><td>Cummins QSK19</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<h2>Governor action gate (marine.governor/check)</h2>
+<table><thead><tr><th>kind</th><th>rule</th><th>meaning</th></tr></thead><tbody>
+<tr><td><span class="critical">HARD</span></td><td><code>:no-vessel</code></td><td>the vessel must be registered before any operation.</td></tr>
+<tr><td><span class="critical">HARD</span></td><td><code>:no-equipment</code></td><td>equipment referenced by :equipment-id must be registered on the vessel.</td></tr>
+<tr><td><span class="critical">HARD</span></td><td><code>:no-engine-control</code></td><td>proposals must never contain direct engine control commands (:engine-control/:throttle/:fuel-cutoff/:propeller-pitch) -- only readings, scheduling, and coordination are permitted.</td></tr>
+<tr><td><span class="critical">HARD</span></td><td><code>:no-actuation</code></td><td>:effect must be :propose only (structurally unreachable via either real advisor -- see namespace docstring).</td></tr>
+<tr><td><span class="warn">ESCALATE</span></td><td><code>:flag-mechanical-fault</code></td><td>any mechanical fault flagging always escalates to human review, regardless of confidence.</td></tr>
+<tr><td><span class="warn">ESCALATE</span></td><td><code>low confidence (&lt; 0.6)</code></td><td>confidence floor is 0.6; basic-advisor's case default (0.5, for any :op outside its known table) reaches this for real.</td></tr>
+</tbody></table>
+</div>
+<div class="card">
+<h2>Audit trail (this scenario's real graph runs)</h2>
+<table><thead><tr><th>thread-id</th><th>vessel</th><th>request</th><th>outcome</th></tr></thead><tbody>
+<tr><td><code>v1-log-reading-ok</code></td><td>vessel-1</td><td>log-engine-reading &middot; equipment=engine-1 &middot; {:reading {:rpm 500, :fuel-pressure 250, :oil-temp 45}}</td><td><span class="ok">committed</span></td></tr>
+<tr><td><code>v1-schedule-maintenance-ok</code></td><td>vessel-1</td><td>schedule-maintenance &middot; {:task "Annual class survey"}</td><td><span class="ok">committed</span></td></tr>
+<tr><td><code>v1-fuel-bunkering-ok</code></td><td>vessel-1</td><td>coordinate-fuel-bunkering &middot; {:fuel-quantity 50000, :fuel-type "IFO 380", :port "Singapore"}</td><td><span class="ok">committed</span></td></tr>
+<tr><td><code>v-unregistered-no-vessel</code></td><td>vessel-999</td><td>log-engine-reading &middot; {:reading {:rpm 500}}</td><td><span class="critical">HARD hold &middot; no-vessel</span></td></tr>
+<tr><td><code>v1-unknown-equipment</code></td><td>vessel-1</td><td>log-engine-reading &middot; equipment=engine-999 &middot; {:reading {:rpm 500}}</td><td><span class="critical">HARD hold &middot; no-equipment</span></td></tr>
+<tr><td><code>v1-throttle-blocked</code></td><td>vessel-1</td><td>throttle &middot; equipment=engine-1 &middot; {:command :throttle-up}</td><td><span class="critical">HARD hold &middot; no-engine-control</span></td></tr>
+<tr><td><code>v1-fault-escalate</code></td><td>vessel-1</td><td>flag-mechanical-fault &middot; equipment=engine-1 &middot; {:fault-description "High crankcase pressure detected", :severity :high}</td><td><span class="ok">approved &amp; committed</span></td></tr>
+<tr><td><code>v1-unclassified-low-confidence</code></td><td>vessel-1</td><td>inspect-general-condition</td><td><span class="ok">approved &amp; committed</span></td></tr>
+<tr><td><code>v2-log-reading-ok</code></td><td>vessel-2</td><td>log-engine-reading &middot; equipment=generator-1 &middot; {:reading {:rpm 1800, :fuel-pressure 300, :oil-temp 60}}</td><td><span class="ok">committed</span></td></tr>
+</tbody></table>
+</div>
+</body></html>
