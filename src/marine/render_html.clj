@@ -72,7 +72,8 @@
 
   Usage: `clojure -M:render-html [out-file]` (default
   `docs/samples/operator-console.html`)."
-  (:require [clojure.string :as str]
+  (:require [jp-go-dds.skin]
+            [clojure.string :as str]
             [marine.store :as store]
             [marine.advisor :as advisor]
             [marine.actor :as actor]))
@@ -220,7 +221,9 @@ code{background:#151922;padding:.1rem .35rem;border-radius:4px;font-size:.85em}
    ["<!doctype html>"
     "<html><head><meta charset=\"utf-8\">"
     "<title>marine operator console -- cloud-itonami-isco-3151</title>"
-    (str "<style>" style "</style></head><body>")
+    (str "<style>"
+   (jp-go-dds.skin/dds+skin)
+   "</style></head><body>")
     "<h1>marine operator console</h1>"
     (str "<p class=\"sub\">ISCO-08 3151 &middot; ship engineering officer actor &middot; "
          "generated at build time by driving the real <code>marine.actor</code> StateGraph "
