@@ -70,7 +70,7 @@
       -- which this page's harness deliberately does not do (it only
       drives the real graph).
 
-  Usage: `clojure -M:render-html [out-file]` (default
+  Usage: `kbb -M:render-html [out-file]` (default
   `docs/samples/operator-console.html`)."
   (:require [jp-go-dds.skin]
             [kotoba.lang.text :as str]

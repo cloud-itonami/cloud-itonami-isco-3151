@@ -11,7 +11,7 @@ and an independent `MarineEngineeringGovernor` (`marine.governor`),
 following the itonami actor pattern (ADR-2607011000): `:intake -> :advise
 -> :govern -> :decide -+-> :commit (:ok?) +-> :request-approval (:escalate?,
 human-in-the-loop interrupt) +-> :hold (:hard?)`. 6 tests / 14 assertions
-green (`clojure -M:test`). 
+green (`kbb -M:test`). 
 
 ## What This Actor Does NOT Do
 

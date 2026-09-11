@@ -243,7 +243,7 @@ approves or rejects.
 Run the test suite:
 
 ```bash
-clojure -M:test
+kbb -M:test
 ```
 
 Expected: 6 tests, 14 assertions green.
