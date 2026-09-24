@@ -1,0 +1,43 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:physics` runs it.
+;;
+;; README: a marine engineering coordination actor for ships' engineers
+;; (ISCO 3151) -- maintenance scheduling, engine parameter logging, fault
+;; escalation and fuel logistics (engine and fuel control stay human). Under
+;; the cloud-itonami robot premise its physical work in the engine room is a
+;; fuel transfer to the settling tank, reading lagged exhaust-pipe surfaces,
+;; and lifting heavy spares such as a fuel injector during maintenance.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isco-3151"
+ :cases
+ [{:id :fuel-transfer-to-settling
+   :kind :pipe-flow
+   :procedure "marine gas oil (850 kg/m3, 3.4 mPa s) is transferred from a double-bottom tank to the settling tank 8 m up through 40 m of 32 mm pipe"
+   :params {:diameter-m 0.032 :length-m 40.0 :roughness-m 4.5e-5
+            :density-kg-m3 850.0 :viscosity-pa-s 3.4e-3 :elevation-m 8.0 :pump-efficiency 0.6}
+   :sweep {:param :q-m3s :values [0.001 0.002 0.003 0.004 0.006]}
+   :quantity :head-m
+   :limit {:max 40.0 :basis "estimate: rated head of a small fuel transfer pump"}
+   :boundary {:lo 1.0e-4 :hi 0.01}}
+  {:id :exhaust-pipe-lagging
+   :kind :thermal
+   :procedure "400 C exhaust pipe under mineral-wool lagging; the robot reads the lagging surface on its engine-room round (steady state)"
+   :params {:conductivity-w-mk 0.06 :density-kg-m3 128.0 :specific-heat-j-kgk 840.0
+            :t0-c 30.0 :t-hot-c 400.0 :front-fixed? true :t-back-ambient-c 30.0 :h-back-w-m2k 10.0
+            :threshold-c 60.0 :duration-s 86400.0 :nodes 11}
+   :sweep {:param :thickness-m :values [0.02 0.03 0.05 0.075 0.10]}
+   :quantity :final-back-c
+   :limit {:max 60.0 :basis "estimate: lagging surface below ~60 C so crew contact in the engine room does not burn (hot-surface insulation near fuel systems is a separate SOLAS requirement not modelled here)"}
+   :boundary {:lo 0.01 :hi 0.20}}
+  {:id :lift-fuel-injector
+   :kind :manipulator
+   :procedure "arm lifts a fuel injector (or similar heavy spare) from the cylinder head to the workbench during overhaul"
+   :params {:l1-m 0.60 :l2-m 0.50 :m1-kg 8.0 :m2-kg 6.0
+            :from [0.40 0.60] :to [0.80 0.20] :duration-s 3.0 :steps 500}
+   :sweep {:param :payload-kg :values [2.0 5.0 8.0 12.0 16.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 150.0 :basis "estimate: continuous shoulder torque of an industrial arm (~10-15 kg payload class) at this reach"}
+   :boundary {:lo 0.5 :hi 50.0}}]}
